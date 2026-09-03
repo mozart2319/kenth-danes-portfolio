@@ -1,0 +1,28 @@
+{
+  "name": "kenth-daniel-danes-portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "serve": "npx http-server . -p 8080 -c-1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.0.0",
+    "http-server": "^14.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozart2319/kenth-danes-portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mozart2319/kenth-danes-portfolio/issues"
+  },
+  "homepage": "https://github.com/mozart2319/kenth-danes-portfolio#readme"
+}

@@ -122,7 +122,7 @@ img { max-width: 100%; display: block; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--white);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--grey-200);
@@ -130,7 +130,7 @@ img { max-width: 100%; display: block; }
   transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
 }
 .site-header.scrolled {
-  background: rgba(8, 14, 30, 0.85);
+  background: var(--navy-900);
   border-bottom-color: rgba(74, 134, 232, 0.35);
   box-shadow: 0 12px 30px rgba(5, 10, 24, 0.35);
 }
@@ -919,6 +919,16 @@ img { max-width: 100%; display: block; }
   background: var(--blue-500);
   transform: translateY(-3px);
 }
+.back-to-top.animating {
+  animation: back-top-bounce .6s ease;
+}
+@keyframes back-top-bounce {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-10px) scale(1.1); }
+  50%  { transform: translateY(0) scale(0.95); }
+  70%  { transform: translateY(-4px) scale(1); }
+  100% { transform: translateY(0) scale(1); }
+}
 
 /* ---------------- Responsive ---------------- */
 @media (max-width: 1024px) {
@@ -945,8 +955,8 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 760px) {
   .main-nav {
-    position: fixed;
-    top: 64px;
+    position: absolute;
+    top: 100%;
     left: 0; right: 0;
     background: var(--white);
     border-bottom: 1px solid var(--grey-200);
@@ -961,6 +971,18 @@ img { max-width: 100%; display: block; }
     opacity: 1;
     pointer-events: auto;
   }
+  /* When the header is scrolled (dark navy), the dropdown follows suit */
+  .site-header.scrolled .main-nav {
+    background: var(--navy-900);
+    border-bottom-color: rgba(74, 134, 232, 0.35);
+  }
+  .site-header.scrolled .main-nav a {
+    color: var(--text-light);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+  .site-header.scrolled .main-nav a:hover {
+    color: var(--blue-300);
+  }
   .main-nav ul {
     flex-direction: column;
     align-items: flex-start;
@@ -974,7 +996,20 @@ img { max-width: 100%; display: block; }
     border-bottom: 1px solid var(--grey-200);
     color: var(--text-body);
   }
-  .nav-cta { display: inline-block; margin-top: 10px; }
+  .nav-cta {
+    display: block;
+    width: 100%;
+    margin: 14px 0 4px;
+    padding: 14px 22px;
+    text-align: center;
+    font-weight: 600;
+    border: none;
+    border-bottom: none;
+    border-radius: var(--radius-full);
+  }
+  .nav-cta:hover {
+    background: var(--blue-400);
+  }
   .nav-toggle { display: flex; }
   .skills-grid { grid-template-columns: 1fr; }
   .cert-grid { grid-template-columns: 1fr; }

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!lightbox || !lightboxImg) return;
     lightboxImg.setAttribute('src', imgSrc);
     lightboxImg.setAttribute('alt', caption || 'Project preview');
-    lightboxCaption.textContent = caption || '';
+    if (lightboxCaption) lightboxCaption.textContent = caption || '';
     if (lightboxLink) {
       if (externalHref) {
         lightboxLink.setAttribute('href', externalHref);
@@ -105,6 +105,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: true });
     backToTop.addEventListener('click', function () {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      backToTop.classList.remove('animating');
+      void backToTop.offsetWidth; // restart the animation
+      backToTop.classList.add('animating');
     });
   }
 
