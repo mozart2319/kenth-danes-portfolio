@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" font-family="Inter,Segoe UI,sans-serif">
+<rect width="1200" height="780" fill="#eef2f9"/>
+<rect x="40" y="30" width="1120" height="720" rx="16" fill="#ffffff" stroke="#e2e7f0"/>
+<rect x="40" y="30" width="1120" height="44" rx="16" fill="#f7f9fc" stroke="#e2e7f0"/>
+<rect x="40" y="66" width="1120" height="8" fill="#f7f9fc"/>
+<circle cx="72" cy="52" r="6" fill="#ff5f57"/>
+<circle cx="94" cy="52" r="6" fill="#febc2e"/>
+<circle cx="116" cy="52" r="6" fill="#28c840"/>
+<text x="180" y="58" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="600" fill="#8f99b0">Hospital Patient Admissions Dashboard.xlsx</text>
+<rect x="78" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="100" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">Total Patient Records</text>
+<text x="100" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">1,605</text>
+<text x="100" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">2023–2025 admission span</text>
+<rect x="440" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="462" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">Departments Tracked</text>
+<text x="462" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">5</text>
+<text x="462" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">Cardiology · ER · Neuro · Onco · Peds</text>
+<rect x="802" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="824" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">Avg. Billing / Record</text>
+<text x="824" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">₱18.6K</text>
+<text x="824" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">per patient across departments</text>
+<rect x="78" y="268" width="640" height="320" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="102" y="302" font-family="Poppins,Segoe UI,sans-serif" font-size="17" font-weight="600" fill="#0c1a36">Patients by Department</text>
+<line x1="98" y1="328.0" x2="694" y2="328.0" stroke="#e2e7f0" stroke-width="1"/>
+<line x1="98" y1="381.0" x2="694" y2="381.0" stroke="#e2e7f0" stroke-width="1"/>
+<line x1="98" y1="434.0" x2="694" y2="434.0" stroke="#e2e7f0" stroke-width="1"/>
+<line x1="98" y1="487.0" x2="694" y2="487.0" stroke="#e2e7f0" stroke-width="1"/>
+<line x1="98" y1="540.0" x2="694" y2="540.0" stroke="#e2e7f0" stroke-width="1"/>
+<rect x="127.6" y="328.0" width="59.2" height="212.0" rx="6" fill="#4a86e8"/>
+<text x="157.2" y="320.0" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="12" font-weight="600" fill="#0c1a36">279</text>
+<text x="157.2" y="562" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Cardiology</text>
+<rect x="246.0" y="337.9" width="59.2" height="202.1" rx="6" fill="#4a86e8"/>
+<text x="275.6" y="329.9" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="12" font-weight="600" fill="#0c1a36">266</text>
+<text x="275.6" y="562" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">ER</text>
+<rect x="364.4" y="328.8" width="59.2" height="211.2" rx="6" fill="#4a86e8"/>
+<text x="394.0" y="320.8" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="12" font-weight="600" fill="#0c1a36">278</text>
+<text x="394.0" y="562" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Neurology</text>
+<rect x="482.8" y="344.7" width="59.2" height="195.3" rx="6" fill="#4a86e8"/>
+<text x="512.4" y="336.7" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="12" font-weight="600" fill="#0c1a36">257</text>
+<text x="512.4" y="562" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Oncology</text>
+<rect x="601.2" y="345.5" width="59.2" height="194.5" rx="6" fill="#4a86e8"/>
+<text x="630.8" y="337.5" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="12" font-weight="600" fill="#0c1a36">256</text>
+<text x="630.8" y="562" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Pediatrics</text>
+<rect x="740" y="268" width="382" height="320" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="764" y="302" font-family="Poppins,Segoe UI,sans-serif" font-size="17" font-weight="600" fill="#0c1a36">Age Distribution</text>
+<circle cx="829" cy="430" r="74" fill="none" stroke="#e2e7f0" stroke-width="26"/>
+<circle cx="829" cy="430" r="78" fill="none" stroke="#3268c8" stroke-width="26" stroke-dasharray="312.98 177.10" transform="rotate(-90.00 829 430)"/>
+<circle cx="829" cy="430" r="78" fill="none" stroke="#4a86e8" stroke-width="26" stroke-dasharray="95.88 394.21" transform="rotate(139.91 829 430)"/>
+<circle cx="829" cy="430" r="78" fill="none" stroke="#7aacfa" stroke-width="26" stroke-dasharray="43.36 446.73" transform="rotate(210.34 829 430)"/>
+<circle cx="829" cy="430" r="78" fill="none" stroke="#b0ccff" stroke-width="26" stroke-dasharray="37.86 452.22" transform="rotate(242.19 829 430)"/>
+<text x="829" y="424" text-anchor="middle" font-family="Poppins,Segoe UI,sans-serif" font-size="26" font-weight="700" fill="#0c1a36">1,605</text>
+<text x="829" y="446" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11" fill="#6b7690">patients</text>
+<rect x="928" y="350" width="12" height="12" rx="3" fill="#3268c8"/>
+<text x="948" y="360" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">36–60</text>
+<text x="1046" y="360" text-anchor="end" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">1,025</text>
+<rect x="928" y="380" width="12" height="12" rx="3" fill="#4a86e8"/>
+<text x="948" y="390" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">60+</text>
+<text x="1046" y="390" text-anchor="end" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">314</text>
+<rect x="928" y="410" width="12" height="12" rx="3" fill="#7aacfa"/>
+<text x="948" y="420" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">0–18</text>
+<text x="1046" y="420" text-anchor="end" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">142</text>
+<rect x="928" y="440" width="12" height="12" rx="3" fill="#b0ccff"/>
+<text x="948" y="450" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">19–35</text>
+<text x="1046" y="450" text-anchor="end" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">124</text>
+<text x="78" y="636" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="500" fill="#6b7690">Gender — Female</text>
+<rect x="228" y="620" width="475.6" height="24" rx="7" fill="#4a86e8" opacity="0.9"/>
+<text x="713.6" y="637" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">528</text>
+<text x="78" y="676" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="500" fill="#6b7690">Gender — Male</text>
+<rect x="228" y="660" width="490.0" height="24" rx="7" fill="#4a86e8" opacity="0.9"/>
+<text x="728.0" y="677" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">544</text>
+<text x="78" y="716" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="500" fill="#6b7690">Gender — Not Specified</text>
+<rect x="228" y="700" width="480.1" height="24" rx="7" fill="#4a86e8" opacity="0.9"/>
+<text x="718.1" y="717" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="600" fill="#0c1a36">533</text>
+</svg>

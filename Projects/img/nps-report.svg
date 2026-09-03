@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" font-family="Inter,Segoe UI,sans-serif">
+<rect width="1200" height="780" fill="#eef2f9"/>
+<rect x="40" y="30" width="1120" height="720" rx="16" fill="#ffffff" stroke="#e2e7f0"/>
+<rect x="40" y="30" width="1120" height="44" rx="16" fill="#f7f9fc" stroke="#e2e7f0"/>
+<rect x="40" y="66" width="1120" height="8" fill="#f7f9fc"/>
+<circle cx="72" cy="52" r="6" fill="#ff5f57"/>
+<circle cx="94" cy="52" r="6" fill="#febc2e"/>
+<circle cx="116" cy="52" r="6" fill="#28c840"/>
+<text x="180" y="58" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="600" fill="#8f99b0">NPS_REPORT — Care VOC.xlsx</text>
+<rect x="78" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="100" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">Survey Responses</text>
+<text x="100" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">88,092</text>
+<text x="100" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">Feb–Aug 2026 · Care VOC</text>
+<rect x="440" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="462" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">Overall NPS</text>
+<text x="462" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">37.7</text>
+<text x="462" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">portfolio weighted average</text>
+<rect x="802" y="112" width="320" height="128" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="824" y="146" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="500" fill="#6b7690">CSAT Coverage</text>
+<text x="824" y="190" font-family="Poppins,Segoe UI,sans-serif" font-size="36" font-weight="700" fill="#0c1a36">78K</text>
+<text x="824" y="216" font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#6b7690">surveys with CSAT rating</text>
+<rect x="78" y="268" width="640" height="320" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="102" y="302" font-family="Poppins,Segoe UI,sans-serif" font-size="17" font-weight="600" fill="#0c1a36">Survey Sentiment Breakdown</text>
+<text x="102" y="324" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Promoters · Neutrals · Detractors (NPS survey)</text>
+<rect x="102" y="352" width="369.6" height="46" fill="#3268c8"/>
+<text x="286.8" y="382" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700" fill="#ffffff">48,285</text>
+<rect x="471.63861464547807" y="352" width="59.4" height="46" fill="#b0ccff"/>
+<text x="501.3" y="382" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700" fill="#ffffff">7,761</text>
+<rect x="531.0517924080038" y="352" width="150.9" height="46" fill="#7aacfa"/>
+<text x="606.5" y="382" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700" fill="#ffffff">19,718</text>
+<rect x="102" y="352" width="580" height="46" rx="0" fill="none" stroke="#e2e7f0"/>
+<rect x="102" y="428" width="13" height="13" rx="3" fill="#3268c8"/>
+<text x="122" y="439" font-family="Inter,Segoe UI,sans-serif" font-size="13" fill="#6b7690">P · 63%</text>
+<rect x="260" y="428" width="13" height="13" rx="3" fill="#b0ccff"/>
+<text x="280" y="439" font-family="Inter,Segoe UI,sans-serif" font-size="13" fill="#6b7690">Neutral · 10%</text>
+<rect x="420" y="428" width="13" height="13" rx="3" fill="#7aacfa"/>
+<text x="440" y="439" font-family="Inter,Segoe UI,sans-serif" font-size="13" fill="#6b7690">D · 26%</text>
+<text x="102" y="508" font-family="Poppins,Segoe UI,sans-serif" font-size="17" font-weight="600" fill="#0c1a36">Monthly NPS Trend (%)</text>
+<line x1="102" y1="580" x2="682" y2="580" stroke="#e2e7f0" stroke-width="1.5"/>
+<text x="130" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Feb</text>
+<text x="174" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Mar</text>
+<text x="218" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Apr</text>
+<text x="262" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">May</text>
+<text x="306" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Jun</text>
+<text x="350" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Jul</text>
+<text x="394" y="600" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11.5" fill="#6b7690">Aug</text>
+<path d="M130.0,554.7 L174.0,532.0 L218.0,537.7 L262.0,545.4 L306.0,541.1 L350.0,547.1 L394.0,572.0" fill="none" stroke="#3268c8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="130.0" cy="554.7" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="174.0" cy="532.0" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="218.0" cy="537.7" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="262.0" cy="545.4" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="306.0" cy="541.1" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="350.0" cy="547.1" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<circle cx="394.0" cy="572.0" r="4.5" fill="#ffffff" stroke="#3268c8" stroke-width="2.5"/>
+<rect x="740" y="268" width="382" height="460" rx="14" fill="#ffffff" stroke="#e2e7f0"/>
+<text x="764" y="302" font-family="Poppins,Segoe UI,sans-serif" font-size="17" font-weight="600" fill="#0c1a36">NPS by Site</text>
+<text x="764" y="334" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Weekly response-time &amp; tenure segmentation</text>
+<text x="764" y="352" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Concentrix-Nuvali</text>
+<rect x="910" y="336" width="147.9" height="20" rx="6" fill="#3268c8" opacity="0.9"/>
+<text x="1065.9" y="352" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="700" fill="#0c1a36">+43.5</text>
+<text x="764" y="398" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Concentrix-Cyberwest</text>
+<rect x="910" y="382" width="140.4" height="20" rx="6" fill="#3268c8" opacity="0.9"/>
+<text x="1058.4" y="398" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="700" fill="#0c1a36">+41.3</text>
+<text x="764" y="444" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Concentrix-New Delhi</text>
+<rect x="910" y="428" width="27.9" height="20" rx="6" fill="#7aacfa" opacity="0.9"/>
+<text x="945.9" y="444" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="700" fill="#0c1a36">+8.2</text>
+<text x="764" y="490" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" fill="#6b7690">Concentrix-Montage</text>
+<rect x="890.6" y="474" width="19.4" height="20" rx="6" fill="#c9d3e4" opacity="0.85"/>
+<text x="882.6" y="490" text-anchor="end" font-family="Inter,Segoe UI,sans-serif" font-size="12.5" font-weight="700" fill="#0c1a36">-5.7</text>
+</svg>
