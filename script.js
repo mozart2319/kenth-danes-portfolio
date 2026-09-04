@@ -153,7 +153,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // hardcoded server-side in Apps Script, never trusted from the client).
   var DESTINATION_EMAIL = 'kenthdaniel.danes@gmail.com';
   var MIN_FILL_MS = 5000; // informational: enforced server-side in Code.gs
-  var REQUEST_TIMEOUT_MS = 12000;
+  // Apps Script cold starts often exceed 10s, so allow 30s before giving up.
+  // No auto-retry: a retry could send a duplicate email and burn the daily limit.
+  var REQUEST_TIMEOUT_MS = 30000;
 
   var fields = {
     name: document.getElementById('name'),
