@@ -159,7 +159,7 @@ test.describe('Contact form validation', () => {
 
     await submitForm(page);
 
-    await expect(page.locator('#formNote')).toContainText('Daily limit reached', { timeout: 10000 });
+    await expect(page.locator('#formNote')).toContainText('Maximum email capacity temporary down', { timeout: 10000 });
     await expect(page.locator('#formNote')).toContainText('email me directly', { timeout: 10000 });
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });

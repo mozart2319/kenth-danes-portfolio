@@ -14,8 +14,8 @@
  * RECIPIENT above. replyTo is set to the visitor so you can reply directly.
  *
  * Spam defense without captcha: token gate + honeypot + 5s time-trap +
- * 2/day per email + 2/day per IP (best-effort) + DAILY_GLOBAL/day global
- * (currently 3 for testing — raise to ~50 for production).
+ * 2/day per email + 2/day per IP (best-effort) + DAILY_GLOBAL/day global.
+ * An alert email goes to RECIPIENT the day the global cap is reached.
  * NOTE: Apps Script cannot see the real client IP, so the page sends a
  * best-effort IP (ipify). Spoofable — the per-EMAIL limit is the primary
  * enforcement; IP is secondary. Missing/invalid IP never blocks.
@@ -55,7 +55,7 @@ var MIN_FILL_MS = 5000;
 var MAX_BODY_BYTES = 15000;
 var DAILY_PER_EMAIL = 2;
 var DAILY_PER_IP = 2;
-var DAILY_GLOBAL = 3; // TESTING value — raise to ~50 for production (Gmail free caps at 100 sends/day total)
+var DAILY_GLOBAL = 3; // TESTING value — alert fires on the 3rd delivery; raise to ~50 for production (Gmail free caps at 100 sends/day total)
 
 function doGet() {
   return jsonOut({ ok: true, status: 'ready' });
@@ -335,7 +335,7 @@ function sendCapAlert(props, day, count) {
         'Per-email cap: ' + DAILY_PER_EMAIL + '/day, per-IP cap: ' + DAILY_PER_IP + '/day.',
         '',
         'What is happening now:',
-        '- Further visitors today see "Daily limit reached (2 per day).',
+        '- Further visitors today see "Maximum email capacity temporary down.',
         '  Please email me directly." and must contact you by email instead.',
         '',
         'What you can do:',

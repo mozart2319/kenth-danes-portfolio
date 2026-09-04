@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function dailyLimitMessage() {
-    return 'Daily limit reached (2 per day). Please email me directly at ' + DESTINATION_EMAIL + '.';
+    return 'Maximum email capacity temporary down. Please email me directly at ' + DESTINATION_EMAIL + '.';
   }
 
   function isConfigured() {
