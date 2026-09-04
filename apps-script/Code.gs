@@ -14,11 +14,11 @@
  * RECIPIENT above. replyTo is set to the visitor so you can reply directly.
  *
  * Spam defense without captcha: token gate + honeypot + 5s time-trap +
- * 2/day per email + 2/day per IP (best-effort) + DAILY_GLOBAL/day global.
+ * 2/day per email + DAILY_GLOBAL/day global.
  * An alert email goes to RECIPIENT the day the global cap is reached.
- * NOTE: Apps Script cannot see the real client IP, so the page sends a
- * best-effort IP (ipify). Spoofable — the per-EMAIL limit is the primary
- * enforcement; IP is secondary. Missing/invalid IP never blocks.
+ * NOTE: there is deliberately NO per-IP block — people on shared wifi or
+ * shared devices must not block each other. The low global cap bounds abuse
+ * instead. A per-email rejection never consumes global quota.
  */
 
 var ALLOWED_TOPICS = [
@@ -50,11 +50,10 @@ var ALLOWED_TIMEZONES = [
   'Pacific/Auckland'
 ];
 
-var MAX_LEN = { name: 100, email: 254, company: 100, date: 20, time: 5, timezone: 50, topic: 60, message: 2000, ip: 45 };
+var MAX_LEN = { name: 100, email: 254, company: 100, date: 20, time: 5, timezone: 50, topic: 60, message: 2000 };
 var MIN_FILL_MS = 5000;
 var MAX_BODY_BYTES = 15000;
 var DAILY_PER_EMAIL = 2;
-var DAILY_PER_IP = 2;
 var DAILY_GLOBAL = 3; // TESTING value — alert fires on the 3rd delivery; raise to ~50 for production (Gmail free caps at 100 sends/day total)
 
 function doGet() {
@@ -110,7 +109,6 @@ function doPost(e) {
     var timezone = sanitize(data.timezone, MAX_LEN.timezone);
     var topic = sanitize(data.topic, MAX_LEN.topic);
     var message = sanitize(data.message, MAX_LEN.message);
-    var clientIp = sanitizeIp(data.clientIp);
 
     if (!name) return jsonOut({ ok: false, error: 'Name is required.' });
     if (!isValidEmail(email)) return jsonOut({ ok: false, error: 'Valid email is required.' });
@@ -119,12 +117,12 @@ function doPost(e) {
     if (ALLOWED_TOPICS.indexOf(topic) === -1) return jsonOut({ ok: false, error: 'Please select a valid topic.' });
     if (!message || message.length < 10) return jsonOut({ ok: false, error: 'Message must be 10+ characters.' });
 
-    // 5. Daily limits: 2/day per email, 2/day per IP, DAILY_GLOBAL/day global.
-    //    Frontend maps LIMIT_REACHED to a "use your personal email" warning.
-    //    Checked BEFORE sending, recorded AFTER a successful send — failed
-    //    attempts (timeouts, errors) never burn quota. If the global cap is
-    //    already hit, alert the inbox (once/day) so you can take action.
-    if (isOverDailyLimit(email, clientIp)) {
+    // 5. Daily limits: 2/day per email, DAILY_GLOBAL/day global.
+    //    Same-email rejections return here BEFORE sending, so they never
+    //    consume global quota. Frontend maps LIMIT_REACHED to the capacity
+    //    warning. If the global cap is already hit, alert the inbox
+    //    (once/day) so you can take action.
+    if (isOverDailyLimit(email)) {
       console.warn('Rejected: daily limit reached');
       sendCapAlertIfNeeded(props);
       return jsonOut({ ok: false, error: 'LIMIT_REACHED' });
@@ -159,7 +157,7 @@ function doPost(e) {
     });
 
     // Only delivered emails consume daily quota.
-    recordDailyUsage(email, clientIp);
+    recordDailyUsage(email);
 
     return jsonOut({ ok: true });
   } catch (err) {
@@ -228,13 +226,6 @@ function isValidEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
 }
 
-function sanitizeIp(v) {
-  var s = String(v == null ? '' : v).trim().slice(0, MAX_LEN.ip);
-  // Accept IPv4/IPv6 chars only; empty/invalid means "unknown" (never blocks).
-  if (!/^[0-9a-fA-F:.]{7,45}$/.test(s)) return '';
-  return s;
-}
-
 function shortHash(s) {
   var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s));
   var hex = '';
@@ -253,29 +244,25 @@ function propCount(props, key) {
   return Number(props.getProperty(key) || 0);
 }
 
-function dailyKeys(email, clientIp) {
+function dailyKeys(email) {
   var day = todayStamp();
-  var hasIp = !!clientIp;
   return {
     day: day,
-    hasIp: hasIp,
     emailKey: 'd_' + day + '_e_' + shortHash(email.toLowerCase()),
-    ipKey: hasIp ? 'd_' + day + '_i_' + shortHash(clientIp) : '',
     globalKey: 'd_' + day + '_g'
   };
 }
 
-function isOverDailyLimit(email, clientIp) {
+function isOverDailyLimit(email) {
   // Read-only check. Daily counters live in Script Properties (CacheService
   // maxes at 6h, too short for a per-day limit). Keys include the date so
-  // they reset automatically. ~3 keys/day is far below the 50k quota.
+  // they reset automatically. ~2 keys/day is far below the 50k quota.
   var lock = LockService.getScriptLock();
   try { lock.waitLock(3000); } catch (ignore) {}
   try {
     var props = PropertiesService.getScriptProperties();
-    var k = dailyKeys(email, clientIp);
+    var k = dailyKeys(email);
     if (propCount(props, k.emailKey) >= DAILY_PER_EMAIL) return true;
-    if (k.hasIp && propCount(props, k.ipKey) >= DAILY_PER_IP) return true;
     if (propCount(props, k.globalKey) >= DAILY_GLOBAL) return true;
     return false;
   } finally {
@@ -283,16 +270,15 @@ function isOverDailyLimit(email, clientIp) {
   }
 }
 
-function recordDailyUsage(email, clientIp) {
+function recordDailyUsage(email) {
   // Called ONLY after MailApp.sendEmail succeeds, so failed attempts and
   // retries never burn quota.
   var lock = LockService.getScriptLock();
   try { lock.waitLock(3000); } catch (ignore) {}
   try {
     var props = PropertiesService.getScriptProperties();
-    var k = dailyKeys(email, clientIp);
+    var k = dailyKeys(email);
     props.setProperty(k.emailKey, String(propCount(props, k.emailKey) + 1));
-    if (k.hasIp) props.setProperty(k.ipKey, String(propCount(props, k.ipKey) + 1));
     var newGlobal = propCount(props, k.globalKey) + 1;
     props.setProperty(k.globalKey, String(newGlobal));
     // Alert once per day the moment the global cap is reached.
@@ -305,7 +291,7 @@ function recordDailyUsage(email, clientIp) {
 function sendCapAlertIfNeeded(props) {
   // Fires the inbox alert when the GLOBAL cap is already reached — covers the
   // case where the cap was hit before this code went live (recordDailyUsage
-  // then never runs again today). Per-email/per-IP rejections do NOT alert.
+  // then never runs again today). Per-email rejections do NOT alert.
   // Never throws.
   try {
     var day = todayStamp();
@@ -332,7 +318,7 @@ function sendCapAlert(props, day, count) {
         '',
         'Date: ' + day,
         'Delivered today: ' + count + ' (cap: ' + DAILY_GLOBAL + ')',
-        'Per-email cap: ' + DAILY_PER_EMAIL + '/day, per-IP cap: ' + DAILY_PER_IP + '/day.',
+        'Per-email cap: ' + DAILY_PER_EMAIL + '/day (same address). No per-IP block.',
         '',
         'What is happening now:',
         '- Further visitors today see "Maximum email capacity temporary down.',

@@ -34,9 +34,6 @@ async function submitForm(page) {
 
 test.describe('Contact form validation', () => {
   test.beforeEach(async ({ page }) => {
-    // Block IP lookup in tests: deterministic, no external dependency.
-    // Missing IP never blocks (server treats it as unknown, email limit applies).
-    await page.route('https://api.ipify.org/**', (route) => route.abort('blockedbyclient'));
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.locator('#meetingForm').waitFor({ state: 'visible' });
     await page.locator('#contact').scrollIntoViewIfNeeded();
@@ -117,7 +114,16 @@ test.describe('Contact form validation', () => {
     await configureMockEndpoint(page, async (route) => {
       const req = route.request();
       const body = JSON.parse(req.postData() || '{}');
-      // No-captcha flow must send token + trap + time fields, never a recipient or captcha.
+      // No-captcha flow must send token + trap + time fields, never a recipient,
+      // captcha, or client IP (no per-IP limit — shared wifi must not block).
+      if ('clientIp' in body) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: false, error: 'unexpected field' }),
+        });
+        return;
+      }
       if (body.time !== '14:30' || body.timezone !== 'Asia/Singapore' || body.date !== '2026-10-15') {
         await route.fulfill({
           status: 200,

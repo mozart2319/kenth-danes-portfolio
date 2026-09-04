@@ -123,10 +123,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ---------- Meeting request form (direct-to-Gmail, no captcha) ----------
      Sends JSON to a Google Apps Script Web App you own, which verifies
-     token + honeypot + time-trap + daily limits (2/day per email, 2/day per
-     IP, 20/day global) server-side, then emails your Gmail. No secrets in
-     this file except the public FORM_TOKEN (rotatable) — recipient stays
-     hardcoded in Apps Script Script Properties. See apps-script/Code.gs. */
+     token + honeypot + time-trap + daily limits (2/day per email, 3/day
+     global) server-side, then emails your Gmail. No per-IP block — shared
+     wifi/devices must not block each other. No secrets in this file except
+     the public FORM_TOKEN (rotatable) — recipient stays hardcoded in Apps
+     Script Script Properties. See apps-script/Code.gs. */
   var form = document.getElementById('meetingForm');
   if (!form) return;
 
@@ -176,29 +177,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // (5s compensates for the removed captcha; normal users take much longer.)
   if (filledAtEl && !filledAtEl.value) filledAtEl.value = String(Date.now());
 
-  // Best-effort client IP for the server's per-IP daily limit (2/day).
-  // NOTE: Apps Script cannot see the real client IP server-side, so the page
-  // fetches it from ipify and sends it along. Spoofable — the per-EMAIL
-  // limit is the primary enforcement; IP is secondary. Never blocks submit
-  // if the lookup fails (privacy/VPN users).
-  var clientIp = '';
-  function isValidIp(v) {
-    return typeof v === 'string' && v.length >= 7 && v.length <= 45 && /^[0-9a-fA-F:.]+$/.test(v);
-  }
-  function fetchClientIp() {
-    try {
-      if (!('fetch' in window)) return;
-      var ctrl = ('AbortController' in window) ? new AbortController() : null;
-      var timer = null;
-      if (ctrl) timer = setTimeout(function () { try { ctrl.abort(); } catch (ignore) {} }, 3000);
-      fetch('https://api.ipify.org?format=json', { signal: ctrl ? ctrl.signal : undefined })
-        .then(function (r) { return r.json(); })
-        .then(function (d) { if (d && isValidIp(d.ip)) clientIp = d.ip; })
-        .catch(function () {})
-        .then(function () { if (timer) clearTimeout(timer); });
-    } catch (ignore) {}
-  }
-  fetchClientIp();
+  // No client-IP collection: there is no per-IP limit (shared wifi/devices
+  // must not block each other), so the visitor's IP is never fetched or sent.
 
   function setError(fieldName, message) {
     var input = fields[fieldName];
@@ -319,7 +299,6 @@ document.addEventListener('DOMContentLoaded', function () {
       formToken: FORM_TOKEN,
       filledAt: filledAtEl ? filledAtEl.value : '',
       'bot-field': botFieldEl ? botFieldEl.value : '',
-      clientIp: clientIp,
       name: fields.name.value.trim().slice(0, 100),
       email: fields.email.value.trim().slice(0, 254),
       company: fields.company ? fields.company.value.trim().slice(0, 100) : '',
