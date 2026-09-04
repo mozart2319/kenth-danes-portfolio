@@ -18,7 +18,8 @@ test.describe('Accessibility checks', () => {
 
   test('form inputs have associated labels', async ({ page }) => {
     await page.locator('#contact').scrollIntoViewIfNeeded();
-    const inputs = page.locator('#meetingForm input[id], #meetingForm select[id], #meetingForm textarea[id]');
+    // Hidden time-trap input needs no label; honeypot has a wrapping label with for="botField".
+    const inputs = page.locator('#meetingForm input[id]:not([type="hidden"]), #meetingForm select[id], #meetingForm textarea[id]');
     const n = await inputs.count();
     expect(n).toBeGreaterThan(0);
     for (let i = 0; i < n; i++) {

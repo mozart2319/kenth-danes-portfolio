@@ -1,14 +1,49 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+const TEST_URL = 'https://script.google.com/macros/s/TEST_ID/exec';
+
+async function fillValidForm(page) {
+  await page.locator('#name').fill('Jane Doe');
+  await page.locator('#email').fill('jane@example.com');
+  await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
+  await page.locator('#message').fill('This is a valid meeting message.');
+}
+
+async function configureMockEndpoint(page, handler) {
+  // Inject test config + stub Turnstile before app script runs logic on submit.
+  await page.evaluate(
+    ({ url }) => {
+      window.__setMeetingFormConfig(url, 'test-token-123');
+      // @ts-ignore
+      window.turnstile = { getResponse: () => 'test-turnstile-token', reset: () => {} };
+      // Make time-trap pass: pretend the form was opened >5s ago.
+      const filled = document.getElementById('filledAt');
+      if (filled) filled.value = String(Date.now() - 5000);
+    },
+    { url: TEST_URL }
+  );
+  await page.route('**/macros/s/**/exec', handler);
+}
+
+async function submitForm(page) {
+  const btn = page.locator('#meetingForm button[type="submit"]');
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+}
+
 test.describe('Contact form validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    // Block external Turnstile in tests: deterministic layout, no network flake.
+    // App code stubs window.turnstile where needed.
+    await page.route('https://challenges.cloudflare.com/**', (route) => route.abort('blockedbyclient'));
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.locator('#meetingForm').waitFor({ state: 'visible' });
     await page.locator('#contact').scrollIntoViewIfNeeded();
   });
 
   test('shows errors for empty required fields', async ({ page }) => {
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await submitForm(page);
 
     await expect(page.locator('#err-name')).not.toBeEmpty();
     await expect(page.locator('#err-email')).not.toBeEmpty();
@@ -22,7 +57,7 @@ test.describe('Contact form validation', () => {
     await page.locator('#email').fill('not-an-email');
     await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
     await page.locator('#message').fill('This is a valid meeting message.');
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await submitForm(page);
 
     await expect(page.locator('#err-email')).toContainText('valid email');
   });
@@ -32,33 +67,112 @@ test.describe('Contact form validation', () => {
     await page.locator('#email').fill('jane@example.com');
     await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
     await page.locator('#message').fill('short');
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await submitForm(page);
 
     await expect(page.locator('#err-message')).toContainText('10+ characters');
   });
 
   test('clears errors when fields are corrected', async ({ page }) => {
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await submitForm(page);
     await expect(page.locator('#err-name')).not.toBeEmpty();
 
-    await page.locator('#name').fill('Jane Doe');
-    await page.locator('#email').fill('jane@example.com');
-    await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
-    await page.locator('#message').fill('This is a valid meeting message.');
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await fillValidForm(page);
+    // Stub Turnstile + mock success so the corrected submit can proceed.
+    await configureMockEndpoint(page, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+    await submitForm(page);
 
     await expect(page.locator('#err-name')).toBeEmpty();
   });
 
-  test('valid submission shows Netlify-unavailable fallback locally and re-enables button', async ({ page }) => {
-    await page.locator('#name').fill('Jane Doe');
-    await page.locator('#email').fill('jane@example.com');
-    await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
-    await page.locator('#message').fill('This is a valid meeting message.');
+  test('honeypot submission fakes success without network and re-enables button', async ({ page }) => {
+    await fillValidForm(page);
+    await page.locator('#botField').fill('spam-bot');
+    await submitForm(page);
 
-    await page.locator('#meetingForm button[type="submit"]').click();
+    await expect(page.locator('#formNote')).toContainText('has been sent', { timeout: 5000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
 
-    // Locally there is no Netlify build, so fetch('/') fails -> graceful message expected.
+  test('unconfigured form shows setup fallback and re-enables button', async ({ page }) => {
+    // Simulate missing config even though repo is now configured for production.
+    await page.evaluate(() => {
+      window.__setMeetingFormConfig(
+        'https://script.google.com/macros/s/REPLACE_WITH_APPS_SCRIPT_ID/exec',
+        'REPLACE_WITH_FORM_TOKEN'
+      );
+    });
+    await fillValidForm(page);
+    await submitForm(page);
+
+    await expect(page.locator('#formNote')).toContainText('not connected yet', { timeout: 5000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
+  test('valid submission via mocked Apps Script succeeds and re-enables button', async ({ page }) => {
+    await fillValidForm(page);
+    await configureMockEndpoint(page, async (route) => {
+      const req = route.request();
+      const body = JSON.parse(req.postData() || '{}');
+      // Safest flow must send token + turnstile + trap fields, never a recipient.
+      if (!body.formToken || !body.turnstileToken || !body.filledAt) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: false, error: 'missing security fields' }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+
+    await submitForm(page);
+
+    await expect(page.locator('#formNote')).toContainText('has been sent', { timeout: 10000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
+  test('server rejection surfaces message and re-enables button', async ({ page }) => {
+    await fillValidForm(page);
+    await configureMockEndpoint(page, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, error: 'Too many requests. Please try again later.' }),
+      });
+    });
+
+    await submitForm(page);
+
+    await expect(page.locator('#formNote')).toContainText('Too many requests', { timeout: 10000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
+  test('network failure shows Gmail fallback and re-enables button', async ({ page }) => {
+    await fillValidForm(page);
+    await page.evaluate(
+      ({ url }) => {
+        window.__setMeetingFormConfig(url, 'test-token-123');
+        // @ts-ignore
+        window.turnstile = { getResponse: () => 'test-turnstile-token', reset: () => {} };
+        const filled = document.getElementById('filledAt');
+        if (filled) filled.value = String(Date.now() - 5000);
+      },
+      { url: TEST_URL }
+    );
+    await page.route('**/macros/s/**/exec', async (route) => route.abort('failed'));
+
+    await submitForm(page);
+
     await expect(page.locator('#formNote')).toContainText('email me directly', { timeout: 10000 });
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });

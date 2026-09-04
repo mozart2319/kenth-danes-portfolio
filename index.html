@@ -542,40 +542,41 @@
       <p class="section-eyebrow">Contact</p>
       <h2 class="section-title">Request a meeting.</h2>
       <p class="section-intro">
-        Fill out the form and it will open a pre-filled email in your mail client addressed
-        to my inbox. Prefer email directly? Reach me at
+        Fill out the form and it will be sent directly to my inbox.
+        Prefer email directly? Reach me at
         <a href="mailto:kenthdaniel.danes@gmail.com">kenthdaniel.danes@gmail.com</a>.
+        Please don’t include sensitive health records or passwords.
       </p>
     </div>
 
     <div class="contact-grid">
 
 <form id="meetingForm" class="meeting-form" name="meeting-request"
-      method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
-
-  <!-- Required by Netlify: tells its build bot which form this is -->
-  <input type="hidden" name="form-name" value="meeting-request">
+      method="POST" action="#" novalidate>
 
   <!-- Honeypot spam trap: real visitors never see or fill this in -->
-  <p class="honeypot-field">
-    <label>Leave this field blank: <input name="bot-field"></label>
+  <p class="honeypot-field" aria-hidden="true">
+    <label for="botField">Leave this field blank: <input name="bot-field" id="botField" tabindex="-1" autocomplete="off"></label>
   </p>
+
+  <!-- Time-trap: set via JS on page load, checked server-side (humans take >3s) -->
+  <input type="hidden" name="filledAt" id="filledAt" value="">
 
   <div class="form-row">
     <label for="name">Full Name <span class="req">*</span></label>
-    <input type="text" id="name" name="name" required autocomplete="name" placeholder="Jane Doe">
+    <input type="text" id="name" name="name" required maxlength="100" autocomplete="name" placeholder="Jane Doe">
     <span class="error-msg" id="err-name"></span>
   </div>
 
   <div class="form-row">
     <label for="email">Email Address <span class="req">*</span></label>
-    <input type="email" id="email" name="email" required autocomplete="email" placeholder="jane@company.com">
+    <input type="email" id="email" name="email" required maxlength="254" autocomplete="email" placeholder="jane@company.com">
     <span class="error-msg" id="err-email"></span>
   </div>
 
   <div class="form-row">
     <label for="company">Company / Organization</label>
-    <input type="text" id="company" name="company" autocomplete="organization" placeholder="Optional">
+    <input type="text" id="company" name="company" maxlength="100" autocomplete="organization" placeholder="Optional">
   </div>
 
   <div class="form-row">
@@ -599,12 +600,15 @@
 
   <div class="form-row">
     <label for="message">Message <span class="req">*</span></label>
-    <textarea id="message" name="message" rows="5" required placeholder="Tell me a bit about what you'd like to discuss..."></textarea>
+    <textarea id="message" name="message" rows="5" required maxlength="2000" placeholder="Tell me a bit about what you'd like to discuss..."></textarea>
     <span class="error-msg" id="err-message"></span>
   </div>
 
+  <div class="turnstile-wrap" id="turnstileWrap" hidden></div>
+
   <button type="submit" class="btn btn-primary btn-block">Send Meeting Request</button>
-  <p class="form-note" id="formNote"></p>
+  <p class="form-note" id="formNote" role="status" aria-live="polite"></p>
+  <p class="privacy-note">Protected by Cloudflare Turnstile + honeypot. Your details are only used to respond to your request.</p>
 </form>
 
       <div class="contact-side">
@@ -693,6 +697,7 @@
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
 
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -793,6 +793,17 @@ img { max-width: 100%; display: block; }
   min-height: 18px;
   margin: 6px 0 0;
 }
+.turnstile-wrap {
+  display: flex;
+  justify-content: flex-start;
+  min-height: 65px;
+}
+.privacy-note {
+  font-size: 0.76rem;
+  color: var(--text-light-muted);
+  margin: 0;
+  opacity: 0.85;
+}
 
 .contact-side { display: grid; gap: 20px; }
 .contact-info-card {
