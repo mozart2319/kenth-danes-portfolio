@@ -119,12 +119,14 @@ function doPost(e) {
     if (ALLOWED_TOPICS.indexOf(topic) === -1) return jsonOut({ ok: false, error: 'Please select a valid topic.' });
     if (!message || message.length < 10) return jsonOut({ ok: false, error: 'Message must be 10+ characters.' });
 
-    // 5. Daily limits: 2/day per email, 2/day per IP, 20/day global.
+    // 5. Daily limits: 2/day per email, 2/day per IP, DAILY_GLOBAL/day global.
     //    Frontend maps LIMIT_REACHED to a "use your personal email" warning.
     //    Checked BEFORE sending, recorded AFTER a successful send — failed
-    //    attempts (timeouts, errors) never burn quota.
+    //    attempts (timeouts, errors) never burn quota. If the global cap is
+    //    already hit, alert the inbox (once/day) so you can take action.
     if (isOverDailyLimit(email, clientIp)) {
       console.warn('Rejected: daily limit reached');
+      sendCapAlertIfNeeded(props);
       return jsonOut({ ok: false, error: 'LIMIT_REACHED' });
     }
 
@@ -300,10 +302,22 @@ function recordDailyUsage(email, clientIp) {
   }
 }
 
+function sendCapAlertIfNeeded(props) {
+  // Fires the inbox alert when the GLOBAL cap is already reached — covers the
+  // case where the cap was hit before this code went live (recordDailyUsage
+  // then never runs again today). Per-email/per-IP rejections do NOT alert.
+  // Never throws.
+  try {
+    var day = todayStamp();
+    var count = propCount(props, 'd_' + day + '_g');
+    if (count >= DAILY_GLOBAL) sendCapAlert(props, day, count);
+  } catch (ignore) {}
+}
+
 function sendCapAlert(props, day, count) {
-  // One alert email per day to RECIPIENT (your inbox). Extra rejections after
-  // the cap stay silent to avoid alert spam. Never throws — an alert failure
-  // must not break the visitor's response.
+  // One alert email per day to RECIPIENT (kenthdaniel.danes23@gmail.com).
+  // Extra rejections after the cap stay silent to avoid alert spam.
+  // Never throws — an alert failure must not break the visitor's response.
   try {
     var flagKey = 'd_' + day + '_alerted';
     if (props.getProperty(flagKey)) return; // already alerted today
@@ -312,17 +326,23 @@ function sendCapAlert(props, day, count) {
     if (!recipient) return;
     MailApp.sendEmail({
       to: recipient,
-      subject: '[Portfolio] Daily form limit reached (' + count + '/' + DAILY_GLOBAL + ')',
+      subject: '[Portfolio] ACTION NEEDED: daily form limit reached (' + count + '/' + DAILY_GLOBAL + ')',
       body: [
-        'Heads up: your portfolio meeting form hit its daily global cap.',
+        'Your portfolio meeting form hit its daily global cap. Please take action.',
         '',
         'Date: ' + day,
         'Delivered today: ' + count + ' (cap: ' + DAILY_GLOBAL + ')',
         'Per-email cap: ' + DAILY_PER_EMAIL + '/day, per-IP cap: ' + DAILY_PER_IP + '/day.',
         '',
-        'Further visitors today see "Daily limit reached (2 per day).',
-        'Please email me directly." and must contact you by email instead.',
-        'Counters reset automatically tomorrow.'
+        'What is happening now:',
+        '- Further visitors today see "Daily limit reached (2 per day).',
+        '  Please email me directly." and must contact you by email instead.',
+        '',
+        'What you can do:',
+        '1. Check your inbox for today\'s meeting requests and reply to them.',
+        '2. To raise the cap, edit DAILY_GLOBAL in Code.gs and deploy a New version.',
+        '3. To unblock today immediately, delete today\'s d_* properties in',
+        '   Project Settings > Script Properties (counters reset on their own tomorrow).'
       ].join('\n'),
       name: 'Portfolio Meeting Form'
     });
