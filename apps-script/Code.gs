@@ -25,7 +25,27 @@ var ALLOWED_TOPICS = [
   'Other'
 ];
 
-var MAX_LEN = { name: 100, email: 254, company: 100, date: 20, topic: 60, message: 2000, ip: 45 };
+var ALLOWED_TIMEZONES = [
+  'Asia/Manila',
+  'UTC',
+  'Pacific/Honolulu',
+  'America/Anchorage',
+  'America/Los_Angeles',
+  'America/Denver',
+  'America/Chicago',
+  'America/New_York',
+  'America/Sao_Paulo',
+  'Europe/London',
+  'Europe/Paris',
+  'Asia/Dubai',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Tokyo',
+  'Australia/Sydney',
+  'Pacific/Auckland'
+];
+
+var MAX_LEN = { name: 100, email: 254, company: 100, date: 20, time: 5, timezone: 50, topic: 60, message: 2000, ip: 45 };
 var MIN_FILL_MS = 5000;
 var MAX_BODY_BYTES = 15000;
 var DAILY_PER_EMAIL = 2;
@@ -81,12 +101,16 @@ function doPost(e) {
     var email = String(data.email || '').trim().slice(0, MAX_LEN.email);
     var company = sanitize(data.company, MAX_LEN.company);
     var date = sanitizeDate(data.date);
+    var time = sanitizeTime(data.time);
+    var timezone = sanitize(data.timezone, MAX_LEN.timezone);
     var topic = sanitize(data.topic, MAX_LEN.topic);
     var message = sanitize(data.message, MAX_LEN.message);
     var clientIp = sanitizeIp(data.clientIp);
 
     if (!name) return jsonOut({ ok: false, error: 'Name is required.' });
     if (!isValidEmail(email)) return jsonOut({ ok: false, error: 'Valid email is required.' });
+    if (time && !isValidTime(time)) return jsonOut({ ok: false, error: 'Please enter a valid time.' });
+    if (!timezone || ALLOWED_TIMEZONES.indexOf(timezone) === -1) return jsonOut({ ok: false, error: 'Please select a valid time zone.' });
     if (ALLOWED_TOPICS.indexOf(topic) === -1) return jsonOut({ ok: false, error: 'Please select a valid topic.' });
     if (!message || message.length < 10) return jsonOut({ ok: false, error: 'Message must be 10+ characters.' });
 
@@ -107,6 +131,7 @@ function doPost(e) {
       'Email: ' + email,
       'Company: ' + (company || '(not provided)'),
       'Preferred date: ' + (date || '(not provided)'),
+      'Preferred time: ' + (time ? time + ' (' + timezone + ')' : '(not provided)'),
       'Topic: ' + topic,
       '',
       'Message:',
@@ -170,6 +195,21 @@ function sanitizeDate(v) {
   // Allow only YYYY-MM-DD or empty (native date input format).
   if (!s) return '';
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
+}
+
+function sanitizeTime(v) {
+  var s = sanitize(v, MAX_LEN.time);
+  // Allow only HH:MM (24h) or empty (native time input format).
+  if (!s) return '';
+  return isValidTime(s) ? s : s;
+}
+
+function isValidTime(v) {
+  var m = /^(\d{2}):(\d{2})$/.exec(String(v || ''));
+  if (!m) return false;
+  var h = Number(m[1]);
+  var min = Number(m[2]);
+  return h >= 0 && h <= 23 && min >= 0 && min <= 59;
 }
 
 function isValidEmail(v) {

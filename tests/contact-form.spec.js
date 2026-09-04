@@ -6,6 +6,9 @@ const TEST_URL = 'https://script.google.com/macros/s/TEST_ID/exec';
 async function fillValidForm(page) {
   await page.locator('#name').fill('Jane Doe');
   await page.locator('#email').fill('jane@example.com');
+  await page.locator('#date').fill('2026-10-15');
+  await page.locator('#time').fill('14:30');
+  await page.locator('#timezone').selectOption('Asia/Singapore');
   await page.locator('#topic').selectOption({ label: 'Job Opportunity' });
   await page.locator('#message').fill('This is a valid meeting message.');
 }
@@ -114,7 +117,15 @@ test.describe('Contact form validation', () => {
     await configureMockEndpoint(page, async (route) => {
       const req = route.request();
       const body = JSON.parse(req.postData() || '{}');
-      // No-captcha flow must send token + trap fields, never a recipient or captcha.
+      // No-captcha flow must send token + trap + time fields, never a recipient or captcha.
+      if (body.time !== '14:30' || body.timezone !== 'Asia/Singapore' || body.date !== '2026-10-15') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: false, error: 'missing time fields' }),
+        });
+        return;
+      }
       if (!body.formToken || !body.filledAt || body.turnstileToken || body.to || body.recipient) {
         await route.fulfill({
           status: 200,
@@ -169,6 +180,11 @@ test.describe('Contact form validation', () => {
     // not the generic network-failure text.
     await expect(page.locator('#formNote')).toContainText('Request rejected.', { timeout: 10000 });
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
+  test('time field defaults to empty and timezone defaults to Manila', async ({ page }) => {
+    await expect(page.locator('#time')).toHaveValue('');
+    await expect(page.locator('#timezone')).toHaveValue('Asia/Manila');
   });
 
   test('network failure shows Gmail fallback and re-enables button', async ({ page }) => {

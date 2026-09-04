@@ -160,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function () {
     email: document.getElementById('email'),
     company: document.getElementById('company'),
     date: document.getElementById('date'),
+    time: document.getElementById('time'),
+    timezone: document.getElementById('timezone'),
     topic: document.getElementById('topic'),
     message: document.getElementById('message')
   };
@@ -227,6 +229,13 @@ document.addEventListener('DOMContentLoaded', function () {
       valid = false;
     } else {
       setError('email', '');
+    }
+
+    if (fields.time && fields.time.value && !/^\d{2}:\d{2}$/.test(fields.time.value)) {
+      setError('time', 'Please enter a valid time.');
+      valid = false;
+    } else {
+      setError('time', '');
     }
 
     if (!fields.topic.value) {
@@ -311,6 +320,8 @@ document.addEventListener('DOMContentLoaded', function () {
       email: fields.email.value.trim().slice(0, 254),
       company: fields.company ? fields.company.value.trim().slice(0, 100) : '',
       date: fields.date ? fields.date.value.slice(0, 20) : '',
+      time: fields.time ? fields.time.value.slice(0, 5) : '',
+      timezone: fields.timezone ? String(fields.timezone.value || '').slice(0, 50) : '',
       topic: String(fields.topic.value || '').slice(0, 60),
       message: fields.message.value.trim().slice(0, 2000)
     };

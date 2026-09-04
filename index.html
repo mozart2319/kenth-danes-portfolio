@@ -585,6 +585,36 @@
   </div>
 
   <div class="form-row">
+    <label for="time">Preferred Time</label>
+    <input type="time" id="time" name="time">
+    <span class="error-msg" id="err-time"></span>
+  </div>
+
+  <div class="form-row">
+    <label for="timezone">Time Zone</label>
+    <select id="timezone" name="timezone">
+      <option value="Asia/Manila" selected>Asia/Manila (GMT+8)</option>
+      <option value="UTC">UTC (GMT+0)</option>
+      <option value="Pacific/Honolulu">Pacific/Honolulu (GMT-10)</option>
+      <option value="America/Anchorage">America/Anchorage (GMT-9)</option>
+      <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
+      <option value="America/Denver">America/Denver (GMT-7)</option>
+      <option value="America/Chicago">America/Chicago (GMT-6)</option>
+      <option value="America/New_York">America/New_York (GMT-5)</option>
+      <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
+      <option value="Europe/London">Europe/London (GMT+0)</option>
+      <option value="Europe/Paris">Europe/Paris (GMT+1)</option>
+      <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
+      <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
+      <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
+      <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
+      <option value="Australia/Sydney">Australia/Sydney (GMT+10)</option>
+      <option value="Pacific/Auckland">Pacific/Auckland (GMT+12)</option>
+    </select>
+    <span class="error-msg" id="err-timezone"></span>
+  </div>
+
+  <div class="form-row">
     <label for="topic">Meeting Topic <span class="req">*</span></label>
     <select id="topic" name="topic" required>
       <option value="" disabled selected>Select a topic</option>
