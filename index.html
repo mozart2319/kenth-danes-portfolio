@@ -586,31 +586,30 @@
 
   <div class="form-row">
     <label for="time">Preferred Time</label>
-    <input type="time" id="time" name="time">
+    <div class="form-row-split">
+      <input type="time" id="time" name="time" aria-describedby="err-time">
+      <label for="timezone" class="visually-hidden">Time zone</label>
+      <select id="timezone" name="timezone" aria-describedby="err-timezone">
+        <option value="Asia/Manila" selected>Philippine Time (UTC+8)</option>
+        <option value="UTC">Coordinated Universal Time (UTC)</option>
+        <option value="Pacific/Honolulu">Hawaii Time (UTC-10)</option>
+        <option value="America/Anchorage">Alaska Time (UTC-9)</option>
+        <option value="America/Los_Angeles">Pacific Time (UTC-8)</option>
+        <option value="America/Denver">Mountain Time (UTC-7)</option>
+        <option value="America/Chicago">Central Time (UTC-6)</option>
+        <option value="America/New_York">Eastern Time (UTC-5)</option>
+        <option value="America/Sao_Paulo">Brasilia Time (UTC-3)</option>
+        <option value="Europe/London">London Time (UTC+0)</option>
+        <option value="Europe/Paris">Paris Time (UTC+1)</option>
+        <option value="Asia/Dubai">Dubai Time (UTC+4)</option>
+        <option value="Asia/Bangkok">Bangkok Time (UTC+7)</option>
+        <option value="Asia/Singapore">Singapore Time (UTC+8)</option>
+        <option value="Asia/Tokyo">Tokyo Time (UTC+9)</option>
+        <option value="Australia/Sydney">Sydney Time (UTC+10)</option>
+        <option value="Pacific/Auckland">Auckland Time (UTC+12)</option>
+      </select>
+    </div>
     <span class="error-msg" id="err-time"></span>
-  </div>
-
-  <div class="form-row">
-    <label for="timezone">Time Zone</label>
-    <select id="timezone" name="timezone">
-      <option value="Asia/Manila" selected>Asia/Manila (GMT+8)</option>
-      <option value="UTC">UTC (GMT+0)</option>
-      <option value="Pacific/Honolulu">Pacific/Honolulu (GMT-10)</option>
-      <option value="America/Anchorage">America/Anchorage (GMT-9)</option>
-      <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
-      <option value="America/Denver">America/Denver (GMT-7)</option>
-      <option value="America/Chicago">America/Chicago (GMT-6)</option>
-      <option value="America/New_York">America/New_York (GMT-5)</option>
-      <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
-      <option value="Europe/London">Europe/London (GMT+0)</option>
-      <option value="Europe/Paris">Europe/Paris (GMT+1)</option>
-      <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
-      <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
-      <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
-      <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-      <option value="Australia/Sydney">Australia/Sydney (GMT+10)</option>
-      <option value="Pacific/Auckland">Pacific/Auckland (GMT+12)</option>
-    </select>
     <span class="error-msg" id="err-timezone"></span>
   </div>
 

@@ -745,6 +745,15 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(8px);
 }
 .form-row { display: grid; gap: 8px; }
+.form-row-split { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .form-row label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -960,6 +969,7 @@ img { max-width: 100%; display: block; }
 }
 
 @media (max-width: 760px) {
+  .form-row-split { grid-template-columns: 1fr; }
   .main-nav {
     position: absolute;
     top: 100%;
