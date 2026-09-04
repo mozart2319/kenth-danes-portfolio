@@ -14,7 +14,8 @@
  * RECIPIENT above. replyTo is set to the visitor so you can reply directly.
  *
  * Spam defense without captcha: token gate + honeypot + 5s time-trap +
- * 2/day per email + 2/day per IP (best-effort) + 20/day global.
+ * 2/day per email + 2/day per IP (best-effort) + DAILY_GLOBAL/day global
+ * (currently 3 for testing — raise to ~50 for production).
  * NOTE: Apps Script cannot see the real client IP, so the page sends a
  * best-effort IP (ipify). Spoofable — the per-EMAIL limit is the primary
  * enforcement; IP is secondary. Missing/invalid IP never blocks.
@@ -54,7 +55,7 @@ var MIN_FILL_MS = 5000;
 var MAX_BODY_BYTES = 15000;
 var DAILY_PER_EMAIL = 2;
 var DAILY_PER_IP = 2;
-var DAILY_GLOBAL = 20;
+var DAILY_GLOBAL = 3; // TESTING value — raise to ~50 for production (Gmail free caps at 100 sends/day total)
 
 function doGet() {
   return jsonOut({ ok: true, status: 'ready' });
@@ -290,10 +291,42 @@ function recordDailyUsage(email, clientIp) {
     var k = dailyKeys(email, clientIp);
     props.setProperty(k.emailKey, String(propCount(props, k.emailKey) + 1));
     if (k.hasIp) props.setProperty(k.ipKey, String(propCount(props, k.ipKey) + 1));
-    props.setProperty(k.globalKey, String(propCount(props, k.globalKey) + 1));
+    var newGlobal = propCount(props, k.globalKey) + 1;
+    props.setProperty(k.globalKey, String(newGlobal));
+    // Alert once per day the moment the global cap is reached.
+    if (newGlobal === DAILY_GLOBAL) sendCapAlert(props, k.day, newGlobal);
   } finally {
     try { lock.releaseLock(); } catch (ignore) {}
   }
+}
+
+function sendCapAlert(props, day, count) {
+  // One alert email per day to RECIPIENT (your inbox). Extra rejections after
+  // the cap stay silent to avoid alert spam. Never throws — an alert failure
+  // must not break the visitor's response.
+  try {
+    var flagKey = 'd_' + day + '_alerted';
+    if (props.getProperty(flagKey)) return; // already alerted today
+    props.setProperty(flagKey, '1');
+    var recipient = props.getProperty('RECIPIENT');
+    if (!recipient) return;
+    MailApp.sendEmail({
+      to: recipient,
+      subject: '[Portfolio] Daily form limit reached (' + count + '/' + DAILY_GLOBAL + ')',
+      body: [
+        'Heads up: your portfolio meeting form hit its daily global cap.',
+        '',
+        'Date: ' + day,
+        'Delivered today: ' + count + ' (cap: ' + DAILY_GLOBAL + ')',
+        'Per-email cap: ' + DAILY_PER_EMAIL + '/day, per-IP cap: ' + DAILY_PER_IP + '/day.',
+        '',
+        'Further visitors today see "Daily limit reached (2 per day).',
+        'Please email me directly." and must contact you by email instead.',
+        'Counters reset automatically tomorrow.'
+      ].join('\n'),
+      name: 'Portfolio Meeting Form'
+    });
+  } catch (ignore) {}
 }
 
 function jsonOut(obj) {
