@@ -6,8 +6,12 @@
  * Deploy > Manage deployments > Edit > New version (same /exec URL)
  *
  * Script Properties to set:
- *   RECIPIENT      = kenthdaniel.danes23@gmail.com
+ *   RECIPIENT      = kenthdaniel.danes23@gmail.com  (where mail is DELIVERED)
  *   FORM_TOKEN     = <same 48-char value as script.js FORM_TOKEN>
+ *
+ * Sender vs recipient: Google always sends FROM the account that owns this
+ * Apps Script project (your server account). The mail is delivered TO
+ * RECIPIENT above. replyTo is set to the visitor so you can reply directly.
  *
  * Spam defense without captcha: token gate + honeypot + 5s time-trap +
  * 2/day per email + 2/day per IP (best-effort) + 20/day global.
@@ -116,7 +120,9 @@ function doPost(e) {
 
     // 5. Daily limits: 2/day per email, 2/day per IP, 20/day global.
     //    Frontend maps LIMIT_REACHED to a "use your personal email" warning.
-    if (isDailyLimited(email, clientIp)) {
+    //    Checked BEFORE sending, recorded AFTER a successful send — failed
+    //    attempts (timeouts, errors) never burn quota.
+    if (isOverDailyLimit(email, clientIp)) {
       console.warn('Rejected: daily limit reached');
       return jsonOut({ ok: false, error: 'LIMIT_REACHED' });
     }
@@ -148,6 +154,9 @@ function doPost(e) {
       body: body,
       name: 'Portfolio Meeting Form'
     });
+
+    // Only delivered emails consume daily quota.
+    recordDailyUsage(email, clientIp);
 
     return jsonOut({ ok: true });
   } catch (err) {
@@ -241,32 +250,47 @@ function propCount(props, key) {
   return Number(props.getProperty(key) || 0);
 }
 
-function isDailyLimited(email, clientIp) {
-  // Daily counters in Script Properties (CacheService maxes at 6h, too short
-  // for a per-day limit). Keys include the date so they reset automatically.
-  // ~3 keys/day is far below the 50k property quota.
+function dailyKeys(email, clientIp) {
+  var day = todayStamp();
+  var hasIp = !!clientIp;
+  return {
+    day: day,
+    hasIp: hasIp,
+    emailKey: 'd_' + day + '_e_' + shortHash(email.toLowerCase()),
+    ipKey: hasIp ? 'd_' + day + '_i_' + shortHash(clientIp) : '',
+    globalKey: 'd_' + day + '_g'
+  };
+}
+
+function isOverDailyLimit(email, clientIp) {
+  // Read-only check. Daily counters live in Script Properties (CacheService
+  // maxes at 6h, too short for a per-day limit). Keys include the date so
+  // they reset automatically. ~3 keys/day is far below the 50k quota.
   var lock = LockService.getScriptLock();
   try { lock.waitLock(3000); } catch (ignore) {}
   try {
     var props = PropertiesService.getScriptProperties();
-    var day = todayStamp();
-    var emailKey = 'd_' + day + '_e_' + shortHash(email.toLowerCase());
-    var globalKey = 'd_' + day + '_g';
-    var hasIp = !!clientIp;
-    var ipKey = hasIp ? 'd_' + day + '_i_' + shortHash(clientIp) : '';
-
-    var emailCount = propCount(props, emailKey);
-    var globalCount = propCount(props, globalKey);
-    var ipCount = hasIp ? propCount(props, ipKey) : 0;
-
-    if (emailCount >= DAILY_PER_EMAIL) return true;
-    if (hasIp && ipCount >= DAILY_PER_IP) return true;
-    if (globalCount >= DAILY_GLOBAL) return true;
-
-    props.setProperty(emailKey, String(emailCount + 1));
-    if (hasIp) props.setProperty(ipKey, String(ipCount + 1));
-    props.setProperty(globalKey, String(globalCount + 1));
+    var k = dailyKeys(email, clientIp);
+    if (propCount(props, k.emailKey) >= DAILY_PER_EMAIL) return true;
+    if (k.hasIp && propCount(props, k.ipKey) >= DAILY_PER_IP) return true;
+    if (propCount(props, k.globalKey) >= DAILY_GLOBAL) return true;
     return false;
+  } finally {
+    try { lock.releaseLock(); } catch (ignore) {}
+  }
+}
+
+function recordDailyUsage(email, clientIp) {
+  // Called ONLY after MailApp.sendEmail succeeds, so failed attempts and
+  // retries never burn quota.
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(3000); } catch (ignore) {}
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var k = dailyKeys(email, clientIp);
+    props.setProperty(k.emailKey, String(propCount(props, k.emailKey) + 1));
+    if (k.hasIp) props.setProperty(k.ipKey, String(propCount(props, k.ipKey) + 1));
+    props.setProperty(k.globalKey, String(propCount(props, k.globalKey) + 1));
   } finally {
     try { lock.releaseLock(); } catch (ignore) {}
   }
