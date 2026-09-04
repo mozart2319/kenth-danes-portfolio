@@ -153,6 +153,24 @@ test.describe('Contact form validation', () => {
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });
 
+  test('server config error surfaces real reason instead of generic fallback', async ({ page }) => {
+    await fillValidForm(page);
+    await configureMockEndpoint(page, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, error: 'Request rejected.' }),
+      });
+    });
+
+    await submitForm(page);
+
+    // Must show the actual server reason (e.g. token/deployment mismatch),
+    // not the generic network-failure text.
+    await expect(page.locator('#formNote')).toContainText('Request rejected.', { timeout: 10000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
   test('network failure shows Gmail fallback and re-enables button', async ({ page }) => {
     await fillValidForm(page);
     await page.evaluate(

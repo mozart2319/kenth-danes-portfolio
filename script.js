@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // time-trap + daily limits + hardcoded recipient). FORM_TOKEN is
   // only a rotatable anti-spam gate, not a password. If spammed, rotate it in
   // BOTH places: Apps Script Script Properties AND here, then redeploy.
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfOJq48Gd-9esIkqke5odjyA9luxErJO2COgONe8dQojt4KSwEdKBpS_s2ZCJI6kzoDw/exec';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVVp49Fh6F9LBUb881OtiWy31vIuTxUl8pxB-0VcKdYvlD4KPRMe-v3wJH-pCFhS-e/exec';
   var FORM_TOKEN = 'WBqdpmVPwMoZdVLlibKKjerSrd5ERUEvoBqZyexPDLOlobJx';
   // Test hook (used by Playwright): lets tests inject a mock endpoint without editing this file.
   try {
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Destination inbox shown only in fallback messages (actual recipient is
   // hardcoded server-side in Apps Script, never trusted from the client).
   var DESTINATION_EMAIL = 'kenthdaniel.danes@gmail.com';
-  var MIN_FILL_MS = 3000;
+  var MIN_FILL_MS = 5000; // informational: enforced server-side in Code.gs
   var REQUEST_TIMEOUT_MS = 12000;
 
   var fields = {
@@ -343,12 +343,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       })
       .catch(function (err) {
-        var msg = (err && err.name === 'AbortError')
-          ? 'Request timed out. Please try again or email me directly at ' + DESTINATION_EMAIL + '.'
-          : 'Something went wrong sending the form. Please email me directly at ' + DESTINATION_EMAIL + '.';
-        // Surface safe server messages: daily-limit warning + validation hints.
-        if (err && err.message && /LIMIT_REACHED|Daily limit|Too many|moment|10\+ characters|valid email|required|valid topic/i.test(err.message)) {
+        // All server-provided errors are safe curated messages from Code.gs
+        // (never internals), so show them as-is — e.g. 'Request rejected.'
+        // means the deployment/token is mismatched, 'Spam check failed' means
+        // the old captcha build is still deployed. Generic text only for true
+        // network failures with no server response at all.
+        var msg;
+        if (err && err.name === 'AbortError') {
+          msg = 'Request timed out. Please try again or email me directly at ' + DESTINATION_EMAIL + '.';
+        } else if (err && err.name !== 'TypeError' && err.message && err.message !== 'Rejected by server') {
+          // Plain Errors are server messages from Code.gs — safe to show.
+          // TypeErrors are browser network failures (offline/CORS/DNS) — generic fallback.
           msg = /LIMIT_REACHED/.test(err.message) ? dailyLimitMessage() : err.message;
+        } else {
+          msg = 'Something went wrong sending the form. Please email me directly at ' + DESTINATION_EMAIL + '.';
         }
         formNote.textContent = msg;
         formNote.style.color = '#ff6b6b';
