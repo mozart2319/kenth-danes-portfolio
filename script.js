@@ -265,9 +265,11 @@ document.addEventListener('DOMContentLoaded', function () {
     return APPS_SCRIPT_URL.indexOf('REPLACE_WITH') === -1 && FORM_TOKEN.indexOf('REPLACE_WITH') === -1;
   }
 
-  // Client-side cooldown: blocks double-click spam (server rate limit is the real gate).
+  // Client-side cooldown: form is ready again 5s after a send in the same
+  // session (fresh page loads are always ready — this timer is memory-only).
+  // Server daily limits are the real gate.
   var lastSuccessAt = 0;
-  var COOLDOWN_MS = 60000;
+  var COOLDOWN_MS = 5000;
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -275,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
     formNote.style.color = '';
 
     if (Date.now() - lastSuccessAt < COOLDOWN_MS) {
-      formNote.textContent = 'Already sent — please wait a minute before sending again.';
+      formNote.textContent = 'Already sent — please wait a few seconds before sending again.';
       formNote.style.color = '#ff6b6b';
       return;
     }

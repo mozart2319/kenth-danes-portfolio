@@ -182,6 +182,27 @@ test.describe('Contact form validation', () => {
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });
 
+  test('same-session resubmit within 5s shows cooldown and re-enables button', async ({ page }) => {
+    await fillValidForm(page);
+    await configureMockEndpoint(page, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+
+    await submitForm(page);
+    await expect(page.locator('#formNote')).toContainText('has been sent', { timeout: 10000 });
+
+    // Refill (success resets the form) and immediately resubmit.
+    await fillValidForm(page);
+    await submitForm(page);
+
+    await expect(page.locator('#formNote')).toContainText('wait a few seconds', { timeout: 5000 });
+    await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
+  });
+
   test('time field defaults to empty and timezone defaults to Manila', async ({ page }) => {
     await expect(page.locator('#time')).toHaveValue('');
     await expect(page.locator('#timezone')).toHaveValue('Asia/Manila');
