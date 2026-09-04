@@ -121,34 +121,30 @@ document.addEventListener('DOMContentLoaded', function () {
     updateHeader();
   }
 
-  /* ---------- Meeting request form (hardened direct-to-Gmail) ----------
+  /* ---------- Meeting request form (direct-to-Gmail, no captcha) ----------
      Sends JSON to a Google Apps Script Web App you own, which verifies
-     token + Turnstile + honeypot + time-trap + rate limits server-side,
-     then emails your Gmail. No secrets in this file except the public
-     FORM_TOKEN (rotatable) — recipient + Turnstile secret stay in
-     Apps Script Script Properties. See apps-script/Code.gs for setup. */
+     token + honeypot + time-trap + daily limits (2/day per email, 2/day per
+     IP, 20/day global) server-side, then emails your Gmail. No secrets in
+     this file except the public FORM_TOKEN (rotatable) — recipient stays
+     hardcoded in Apps Script Script Properties. See apps-script/Code.gs. */
   var form = document.getElementById('meetingForm');
   if (!form) return;
 
   // ==== Production config (public by design for a static site) ====
-  // SECURITY NOTE: these 3 values are visible in View Source by design.
-  // Real security is server-side in apps-script/Code.gs (Turnstile verify +
-  // honeypot + time-trap + rate limits + hardcoded recipient). FORM_TOKEN is
+  // SECURITY NOTE: these 2 values are visible in View Source by design.
+  // Real security is server-side in apps-script/Code.gs (honeypot +
+  // time-trap + daily limits + hardcoded recipient). FORM_TOKEN is
   // only a rotatable anti-spam gate, not a password. If spammed, rotate it in
   // BOTH places: Apps Script Script Properties AND here, then redeploy.
-  // NEVER put TURNSTILE_SECRET here — it stays in Script Properties only.
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfOJq48Gd-9esIkqke5odjyA9luxErJO2COgONe8dQojt4KSwEdKBpS_s2ZCJI6kzoDw/exec';
   var FORM_TOKEN = 'WBqdpmVPwMoZdVLlibKKjerSrd5ERUEvoBqZyexPDLOlobJx';
-  var TURNSTILE_SITE_KEY = '0x4AAAAAAEm6ORaVMVlI10Ui';
   // Test hook (used by Playwright): lets tests inject a mock endpoint without editing this file.
   try {
     if (window.__MEETING_FORM_URL) APPS_SCRIPT_URL = window.__MEETING_FORM_URL;
     if (window.__MEETING_FORM_TOKEN) FORM_TOKEN = window.__MEETING_FORM_TOKEN;
-    if (window.__MEETING_TURNSTILE_KEY) TURNSTILE_SITE_KEY = window.__MEETING_TURNSTILE_KEY;
-    window.__setMeetingFormConfig = function (url, token, siteKey) {
+    window.__setMeetingFormConfig = function (url, token) {
       if (url) APPS_SCRIPT_URL = url;
       if (token) FORM_TOKEN = token;
-      if (siteKey) TURNSTILE_SITE_KEY = siteKey;
     };
   } catch (ignore) {}
   // ===========================================================================
@@ -172,36 +168,33 @@ document.addEventListener('DOMContentLoaded', function () {
   var filledAtEl = document.getElementById('filledAt');
   var botFieldEl = document.getElementById('botField');
 
-  // Time-trap start: humans take >3s to fill the form; bots submit instantly.
+  // Time-trap start: humans take >5s to fill the form; bots submit instantly.
+  // (5s compensates for the removed captcha; normal users take much longer.)
   if (filledAtEl && !filledAtEl.value) filledAtEl.value = String(Date.now());
 
-  // Render Turnstile only when a real site key is configured. This keeps local
-  // dev + tests (placeholders) free of Cloudflare 400020 errors, and production
-  // gets the invisible captcha. The external api.js script scans for explicit
-  // render, so we call turnstile.render once it loads.
-  var turnstileWrap = document.getElementById('turnstileWrap');
-  function isTurnstileConfigured() {
-    return TURNSTILE_SITE_KEY && TURNSTILE_SITE_KEY.indexOf('REPLACE_WITH') === -1;
+  // Best-effort client IP for the server's per-IP daily limit (2/day).
+  // NOTE: Apps Script cannot see the real client IP server-side, so the page
+  // fetches it from ipify and sends it along. Spoofable — the per-EMAIL
+  // limit is the primary enforcement; IP is secondary. Never blocks submit
+  // if the lookup fails (privacy/VPN users).
+  var clientIp = '';
+  function isValidIp(v) {
+    return typeof v === 'string' && v.length >= 7 && v.length <= 45 && /^[0-9a-fA-F:.]+$/.test(v);
   }
-  function renderTurnstileIfReady() {
-    if (!turnstileWrap || !isTurnstileConfigured()) return false;
+  function fetchClientIp() {
     try {
-      if (window.turnstile && typeof window.turnstile.render === 'function' && !turnstileWrap.hasAttribute('data-rendered')) {
-        window.turnstile.render('#turnstileWrap', { sitekey: TURNSTILE_SITE_KEY, theme: 'auto' });
-        turnstileWrap.removeAttribute('hidden');
-        turnstileWrap.setAttribute('data-rendered', 'true');
-        return true;
-      }
+      if (!('fetch' in window)) return;
+      var ctrl = ('AbortController' in window) ? new AbortController() : null;
+      var timer = null;
+      if (ctrl) timer = setTimeout(function () { try { ctrl.abort(); } catch (ignore) {} }, 3000);
+      fetch('https://api.ipify.org?format=json', { signal: ctrl ? ctrl.signal : undefined })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && isValidIp(d.ip)) clientIp = d.ip; })
+        .catch(function () {})
+        .then(function () { if (timer) clearTimeout(timer); });
     } catch (ignore) {}
-    return false;
   }
-  if (isTurnstileConfigured()) {
-    var renderAttempts = 0;
-    var renderTimer = setInterval(function () {
-      renderAttempts++;
-      if (renderTurnstileIfReady() || renderAttempts > 50) clearInterval(renderTimer);
-    }, 200);
-  }
+  fetchClientIp();
 
   function setError(fieldName, message) {
     var input = fields[fieldName];
@@ -253,21 +246,8 @@ document.addEventListener('DOMContentLoaded', function () {
     return valid;
   }
 
-  function getTurnstileToken() {
-    try {
-      if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
-        return window.turnstile.getResponse() || '';
-      }
-    } catch (ignore) {}
-    // Fallback: some Turnstile renderings expose the response in a hidden input.
-    var alt = document.querySelector('[name="cf-turnstile-response"]');
-    return alt ? (alt.value || '') : '';
-  }
-
-  function resetTurnstile() {
-    try {
-      if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
-    } catch (ignore) {}
+  function dailyLimitMessage() {
+    return 'Daily limit reached (2 per day). Please email me directly at ' + DESTINATION_EMAIL + '.';
   }
 
   function isConfigured() {
@@ -324,9 +304,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Never console.log(payload) — it contains PII + token.
     var payload = {
       formToken: FORM_TOKEN,
-      turnstileToken: getTurnstileToken(),
       filledAt: filledAtEl ? filledAtEl.value : '',
       'bot-field': botFieldEl ? botFieldEl.value : '',
+      clientIp: clientIp,
       name: fields.name.value.trim().slice(0, 100),
       email: fields.email.value.trim().slice(0, 254),
       company: fields.company ? fields.company.value.trim().slice(0, 100) : '',
@@ -334,13 +314,6 @@ document.addEventListener('DOMContentLoaded', function () {
       topic: String(fields.topic.value || '').slice(0, 60),
       message: fields.message.value.trim().slice(0, 2000)
     };
-
-    if (!payload.turnstileToken) {
-      formNote.textContent = 'Please complete the spam check and try again.';
-      formNote.style.color = '#ff6b6b';
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
 
     var controller = ('AbortController' in window) ? new AbortController() : null;
     var timer = null;
@@ -373,14 +346,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var msg = (err && err.name === 'AbortError')
           ? 'Request timed out. Please try again or email me directly at ' + DESTINATION_EMAIL + '.'
           : 'Something went wrong sending the form. Please email me directly at ' + DESTINATION_EMAIL + '.';
-        // Surface server-provided validation messages (rate limit, spam check) when safe.
-        if (err && err.message && /Too many|Spam check|moment/.test(err.message)) msg = err.message;
+        // Surface safe server messages: daily-limit warning + validation hints.
+        if (err && err.message && /LIMIT_REACHED|Daily limit|Too many|moment|10\+ characters|valid email|required|valid topic/i.test(err.message)) {
+          msg = /LIMIT_REACHED/.test(err.message) ? dailyLimitMessage() : err.message;
+        }
         formNote.textContent = msg;
         formNote.style.color = '#ff6b6b';
       })
       .then(function () {
         if (timer) clearTimeout(timer);
-        resetTurnstile();
         if (submitBtn) submitBtn.disabled = false;
       });
   }

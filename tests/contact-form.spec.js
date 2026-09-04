@@ -11,15 +11,12 @@ async function fillValidForm(page) {
 }
 
 async function configureMockEndpoint(page, handler) {
-  // Inject test config + stub Turnstile before app script runs logic on submit.
+  // Inject test config; make time-trap pass (>5s).
   await page.evaluate(
     ({ url }) => {
       window.__setMeetingFormConfig(url, 'test-token-123');
-      // @ts-ignore
-      window.turnstile = { getResponse: () => 'test-turnstile-token', reset: () => {} };
-      // Make time-trap pass: pretend the form was opened >5s ago.
       const filled = document.getElementById('filledAt');
-      if (filled) filled.value = String(Date.now() - 5000);
+      if (filled) filled.value = String(Date.now() - 8000);
     },
     { url: TEST_URL }
   );
@@ -34,9 +31,9 @@ async function submitForm(page) {
 
 test.describe('Contact form validation', () => {
   test.beforeEach(async ({ page }) => {
-    // Block external Turnstile in tests: deterministic layout, no network flake.
-    // App code stubs window.turnstile where needed.
-    await page.route('https://challenges.cloudflare.com/**', (route) => route.abort('blockedbyclient'));
+    // Block IP lookup in tests: deterministic, no external dependency.
+    // Missing IP never blocks (server treats it as unknown, email limit applies).
+    await page.route('https://api.ipify.org/**', (route) => route.abort('blockedbyclient'));
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.locator('#meetingForm').waitFor({ state: 'visible' });
     await page.locator('#contact').scrollIntoViewIfNeeded();
@@ -77,7 +74,6 @@ test.describe('Contact form validation', () => {
     await expect(page.locator('#err-name')).not.toBeEmpty();
 
     await fillValidForm(page);
-    // Stub Turnstile + mock success so the corrected submit can proceed.
     await configureMockEndpoint(page, async (route) => {
       await route.fulfill({
         status: 200,
@@ -100,7 +96,6 @@ test.describe('Contact form validation', () => {
   });
 
   test('unconfigured form shows setup fallback and re-enables button', async ({ page }) => {
-    // Simulate missing config even though repo is now configured for production.
     await page.evaluate(() => {
       window.__setMeetingFormConfig(
         'https://script.google.com/macros/s/REPLACE_WITH_APPS_SCRIPT_ID/exec',
@@ -119,8 +114,8 @@ test.describe('Contact form validation', () => {
     await configureMockEndpoint(page, async (route) => {
       const req = route.request();
       const body = JSON.parse(req.postData() || '{}');
-      // Safest flow must send token + turnstile + trap fields, never a recipient.
-      if (!body.formToken || !body.turnstileToken || !body.filledAt) {
+      // No-captcha flow must send token + trap fields, never a recipient or captcha.
+      if (!body.formToken || !body.filledAt || body.turnstileToken || body.to || body.recipient) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -141,19 +136,20 @@ test.describe('Contact form validation', () => {
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });
 
-  test('server rejection surfaces message and re-enables button', async ({ page }) => {
+  test('daily limit surfaces direct-email warning and re-enables button', async ({ page }) => {
     await fillValidForm(page);
     await configureMockEndpoint(page, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: false, error: 'Too many requests. Please try again later.' }),
+        body: JSON.stringify({ ok: false, error: 'LIMIT_REACHED' }),
       });
     });
 
     await submitForm(page);
 
-    await expect(page.locator('#formNote')).toContainText('Too many requests', { timeout: 10000 });
+    await expect(page.locator('#formNote')).toContainText('Daily limit reached', { timeout: 10000 });
+    await expect(page.locator('#formNote')).toContainText('email me directly', { timeout: 10000 });
     await expect(page.locator('#meetingForm button[type="submit"]')).toBeEnabled();
   });
 
@@ -162,10 +158,8 @@ test.describe('Contact form validation', () => {
     await page.evaluate(
       ({ url }) => {
         window.__setMeetingFormConfig(url, 'test-token-123');
-        // @ts-ignore
-        window.turnstile = { getResponse: () => 'test-turnstile-token', reset: () => {} };
         const filled = document.getElementById('filledAt');
-        if (filled) filled.value = String(Date.now() - 5000);
+        if (filled) filled.value = String(Date.now() - 8000);
       },
       { url: TEST_URL }
     );
