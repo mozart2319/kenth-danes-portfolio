@@ -54,7 +54,7 @@ var MAX_LEN = { name: 100, email: 254, company: 100, date: 20, time: 5, timezone
 var MIN_FILL_MS = 5000;
 var MAX_BODY_BYTES = 15000;
 var DAILY_PER_EMAIL = 2;
-var DAILY_GLOBAL = 3; // TESTING value — alert fires on the 3rd delivery; raise to ~50 for production (Gmail free caps at 100 sends/day total)
+var DAILY_GLOBAL = 50; // PRODUCTION value — alert fires on the 50th delivery (Gmail free caps at 100 sends/day total, so keep this well below that)
 
 function doGet() {
   return jsonOut({ ok: true, status: 'ready' });
